@@ -91,3 +91,4 @@ namespace org.zxteam.apiwrap.poloniex._internal
 
 	}
 }
+#pragma warning restore 0649

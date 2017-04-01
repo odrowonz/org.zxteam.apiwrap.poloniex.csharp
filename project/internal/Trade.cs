@@ -84,3 +84,4 @@ namespace org.zxteam.apiwrap.poloniex._internal
 		decimal data.ITrade.Total { get { return this.total; } }
 	}
 }
+#pragma warning restore 0649
