@@ -1,45 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Globalization;
-
+﻿#pragma warning disable 0649
 namespace org.zxteam.apiwrap.poloniex._internal
 {
-	//	{
-	//"globalTradeID":2036467,
-	//"tradeID":21387,
-	//"date":"2014-09-12 05:21:26",
-	//"type":"buy",
-	//"rate":"0.00008943",
-	//"amount":"1.27241180",
-	//"total":"0.00011379"
-	//}
-	[DataContract]
+	using System;
+	using System.Globalization;
+	using Newtonsoft.Json;
+
+	//	[
+	//		{
+	//			"globalTradeID":2036467,
+	//			"tradeID":21387,
+	//			"date":"2014-09-12 05:21:26",
+	//			"type":"buy",
+	//			"rate":"0.00008943",
+	//			"amount":"1.27241180",
+	//			"total":"0.00011379"
+	//		},
+	//		.....
+	//	]
+	[JsonObject]
 	internal class Trade : data.ITrade
 	{
 		private const string DatePattern = "yyyy-MM-dd HH:mm:ss";
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private long globalTradeID;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private long tradeID;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private string date;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private string type;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private decimal rate;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private decimal amount;
 
-		[DataMember]
+		[JsonProperty]
+		[JsonRequired]
 		private decimal total;
 
 #if DEBUG
@@ -49,9 +57,13 @@ namespace org.zxteam.apiwrap.poloniex._internal
 		}
 #endif
 
+		[JsonIgnore]
 		long data.ITrade.GlobalTradeID { get { return this.globalTradeID; } }
+		[JsonIgnore]
 		long data.ITrade.TradeID { get { return this.tradeID; } }
+		[JsonIgnore]
 		DateTime data.ITrade.UtcDate { get { return DateTime.ParseExact(this.date, DatePattern, CultureInfo.InvariantCulture, DateTimeStyles.None); } }
+		[JsonIgnore]
 		data.TradeType data.ITrade.Type
 		{
 			get
@@ -64,8 +76,11 @@ namespace org.zxteam.apiwrap.poloniex._internal
 				}
 			}
 		}
+		[JsonIgnore]
 		decimal data.ITrade.Rate { get { return this.rate; } }
+		[JsonIgnore]
 		decimal data.ITrade.Amount { get { return this.amount; } }
+		[JsonIgnore]
 		decimal data.ITrade.Total { get { return this.total; } }
 	}
 }

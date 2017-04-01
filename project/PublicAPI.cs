@@ -3,12 +3,11 @@
 	using System;
 	using System.Collections.Generic;
 	using System.Diagnostics.Contracts;
-	using System.IO;
 	using System.Linq;
 	using System.Net;
-	using System.Runtime.Serialization.Json;
 	using org.zxteam.apiwrap.poloniex._internal;
 	using org.zxteam.apiwrap.poloniex.data;
+	using Newtonsoft.Json;
 
 	public class PublicAPI
 	{
@@ -22,7 +21,23 @@
 			this._url = new Uri(url);
 		}
 
-		public IEnumerable<ITrade> GetTradeHistory(string currencyPair, DateTime from, DateTime to)
+		public WebProxy Proxy { get; set; }
+
+		[Pure]
+		public ICurrency[] GetCurrencies()
+		{
+			string response = this.DownloadJSON("returnCurrencies");
+
+			Dictionary<string, Currency> responseDict = JsonConvert.DeserializeObject<Dictionary<string, Currency>>(response);
+
+			return responseDict.Select(s =>
+			{
+				s.Value.Code = s.Key; return s.Value;
+			}).ToArray();
+		}
+
+		[Pure]
+		public ITrade[] GetTradeHistory(string currencyPair, DateTime from, DateTime to)
 		{
 			long unixFrom = TranslateToUnixTime(from.ToUniversalTime());
 			long unixTo = TranslateToUnixTime(to.ToUniversalTime());
@@ -34,28 +49,32 @@
 			};
 			string response = this.DownloadJSON("returnTradeHistory", args);
 
-			DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(Trade[]));
-			object objResponse = jsonSerializer.ReadObject(
-				new MemoryStream(System.Text.Encoding.UTF8.GetBytes(response))
-				);
-			Trade[] friendlyResponse = (Trade[])objResponse;
+			Trade[] friendlyResponse = JsonConvert.DeserializeObject<Trade[]>(response);
+
 			if (friendlyResponse.Length >= 50000)
 			{
-				throw new InvalidOperationException("Response records are overflow. Regarding Poloniex contract: up to 50,000 trades between a range specified in UNIX timestamps by the \"start\" and \"end\". Please use smaller range.");
+				// Response records are overflow. 
+				// Regarding Poloniex contract: up to 50,000 trades
+				//   between a range specified in UNIX timestamps by 
+				//   the \"start\" and \"end\". Please use smaller range.
+				throw new PoloniexOverflowException();
 			}
-			return friendlyResponse.AsEnumerable();
+			return friendlyResponse;
 		}
 
 		[Pure]
-		private string DownloadJSON(string method, IDictionary<string, string> args)
+		private string DownloadJSON(string method, IDictionary<string, string> args = null)
 		{
 			using (WebClient wc = new WebClient())
 			{
-				wc.Proxy = this.AutodetectWebProxy();
+				wc.Proxy = this.Proxy ?? this.AutodetectWebProxy();
 				wc.QueryString.Add("command", method);
-				foreach (var arg in args)
+				if (args != null)
 				{
-					wc.QueryString.Add(arg.Key, arg.Value);
+					foreach (var arg in args)
+					{
+						wc.QueryString.Add(arg.Key, arg.Value);
+					}
 				}
 				string url = this._url.AbsoluteUri;
 				var qq = wc.QueryString;
@@ -81,5 +100,9 @@
 
 		[Pure]
 		private static long TranslateToUnixTime(DateTime date) { return (long)date.Subtract(UNIXBASETIME).TotalSeconds; }
+
+		public class PoloniexOverflowException : InvalidOperationException
+		{
+		}
 	}
 }
