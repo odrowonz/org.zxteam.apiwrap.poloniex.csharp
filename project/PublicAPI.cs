@@ -1,12 +1,13 @@
 ﻿namespace org.zxteam.apiwrap.poloniex
 {
+	using _internal;
+	using data;
+
 	using System;
 	using System.Collections.Generic;
 	using System.Diagnostics.Contracts;
 	using System.Linq;
 	using System.Net;
-	using org.zxteam.apiwrap.poloniex._internal;
-	using org.zxteam.apiwrap.poloniex.data;
 	using Newtonsoft.Json;
 
 	public class PublicAPI
@@ -60,6 +61,19 @@
 				throw new PoloniexOverflowException();
 			}
 			return friendlyResponse;
+		}
+
+		[Pure]
+		public ITicker[] GetTiker()
+		{
+			string response = this.DownloadJSON("returnTicker");
+
+			Dictionary<string, Ticker> responseDict = JsonConvert.DeserializeObject<Dictionary<string, Ticker>>(response);
+
+			return responseDict.Select(s =>
+			{
+				s.Value.CurrencyPair = s.Key; return s.Value;
+			}).ToArray();
 		}
 
 		[Pure]

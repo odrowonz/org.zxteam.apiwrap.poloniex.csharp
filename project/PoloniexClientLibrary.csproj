@@ -49,7 +49,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="data\ICurrency.cs" />
+    <Compile Include="data\ITicker.cs" />
     <Compile Include="data\ITrade.cs" />
+    <Compile Include="internal\Ticker.cs" />
     <Compile Include="internal\Currency.cs" />
     <Compile Include="internal\Trade.cs" />
     <Compile Include="PublicAPI.cs" />
